@@ -1,37 +1,32 @@
 # streamlit_app.py
 
 import streamlit as st
-import snowflake.connector
+import snowflake.connector as sf
 
-# Initialize connection.
-# Uses st.cache_resource to only run once.
-@st.cache_resource
-def init_connection():
-    return snowflake.connector.connect(
-        **st.secrets["snowflake"], client_session_keep_alive=True
-    )
+# Connect to Snowflake
+conn = sf.connect(
+    user = "SUGARDATA"
+password = "HomeAlone@1"
+account = "ub37293"
+warehouse = "COMPUTE_WH"
+database = "TEST"
+schema = "PUBLIC"
+)
 
-cs = ctx.cursor()
-try:
-    cs.execute("SELECT current_version()")
-    one_row = cs.fetchone()
-    print(one_row[0])
-finally:
-    cs.close()
-ctx.close()
+# Create a cursor object
+cur = conn.cursor()
 
-conn = init_connection()
+# Execute a query
+cur.execute('SELECT * FROM your_table')
 
-# Perform query.
-# Uses st.cache_data to only rerun when the query changes or after 10 min.
-@st.cache_data(ttl=600)
-def run_query(query):
-    with conn.cursor() as cur:
-        cur.execute(query)
-        return cur.fetchall()
+# Fetch the data
+data = cur.fetchall()
 
-rows = run_query("SELECT * from mytable;")
+# Display the data in a Streamlit table
+st.table(data)
 
-# Print results.
-for row in rows:
-    st.write(f"{row[0]} has a :{row[1]}:")
+uploaded_files = st.file_uploader("Choose a CSV file", accept_multiple_files=True)
+for uploaded_file in uploaded_files:
+    bytes_data = uploaded_file.read()
+    st.write("filename:", uploaded_file.name)
+    st.write(bytes_data)
