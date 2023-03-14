@@ -5,12 +5,12 @@ import snowflake.connector as sf
 
 # Connect to Snowflake
 conn = sf.connect(
-    user = "SUGARDATA"
-password = "HomeAlone@1"
-account = "ub37293"
-warehouse = "COMPUTE_WH"
-database = "TEST"
-schema = "PUBLIC"
+    user = "SUGARDATA",
+    password = "HomeAlone@1",
+    account = "ub37293",
+    warehouse = "COMPUTE_WH",
+    database = "TEST",
+    schema = "PUBLIC"
 )
 
 # Create a cursor object
@@ -21,6 +21,9 @@ cur.execute('SELECT * FROM your_table')
 
 # Fetch the data
 data = cur.fetchall()
+cur.execute("SELECT current_version()")
+one_row = cur.fetchone()
+print(one_row[0])
 
 # Display the data in a Streamlit table
 st.table(data)
