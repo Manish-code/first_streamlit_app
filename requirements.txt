@@ -1,2 +1,3 @@
 streamlit==1.11.0
--r https://raw.githubusercontent.com/snowflakedb/snowflake-connector-python/main/tested_requirements/requirements_39.reqs
+#-r https://raw.githubusercontent.com/snowflakedb/snowflake-connector-python/main/tested_requirements/requirements_39.reqs
+-r https://raw.githubusercontent.com/snowflakedb/snowflake-connector-python/v3.0.1/tested_requirements/requirements_36.reqs

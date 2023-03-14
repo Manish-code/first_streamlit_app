@@ -11,6 +11,15 @@ def init_connection():
         **st.secrets["snowflake"], client_session_keep_alive=True
     )
 
+cs = ctx.cursor()
+try:
+    cs.execute("SELECT current_version()")
+    one_row = cs.fetchone()
+    print(one_row[0])
+finally:
+    cs.close()
+ctx.close()
+
 conn = init_connection()
 
 # Perform query.
