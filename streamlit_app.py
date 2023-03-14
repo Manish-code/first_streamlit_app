@@ -1,24 +1,46 @@
-import streamlit
+import streamlit as st
+import snowflake.connector as snow
+from snowpark import SparkSession
+from snowpark.sql.types import *
 
-streamlit.title('My Mom\'s New Healthy Diner')
+# Connect to Snowflake
+conn = snow.connect(
+    user='your_username',
+    password='your_password',
+    account='your_account_name',
+    database='your_database_name',
+    schema='your_schema_name'
+)
 
-streamlit.header('Breakfast Favourites')
-streamlit.text('🥣 Omega 3 & Blueberry Oatmeal')
-streamlit.text('🥗 Kale, Spinach & Rocket Smoothie')
-streamlit.text('🐔 Hard-Boiled Free-Range Egg')
-streamlit.text('🥑🍞 Avocado Toast')
-                
-streamlit.header('🍌🥭 Build Your Own Fruit Smoothie 🥝🍇')
+# Create a Snowpark session
+spark = SparkSession.builder() \
+            .option("spark.datasource.username", "your_username") \
+            .option("spark.datasource.password", "your_password") \
+            .option("spark.datasource.sfUrl", f"jdbc:snowflake://{your_account_name}.snowflakecomputing.com") \
+            .option("spark.datasource.sfDatabase", "your_database_name") \
+            .option("spark.datasource.sfSchema", "your_schema_name") \
+            .getOrCreate()
 
-import pandas
-my_fruit_list = pandas.read_csv("https://uni-lab-files.s3.us-west-2.amazonaws.com/dabw/fruit_macros.txt")
-my_fruit_list = my_fruit_list.set_index('Fruit')
+# Define the schema for the Snowflake table
+schema = StructType([
+    StructField("col1", StringType(), True),
+    StructField("col2", IntegerType(), True),
+    StructField("col3", DoubleType(), True)
+])
 
-# Let's put a pick list here so they can pick the fruit they want to include 
-fruits_selected = streamlit.multiselect("Pick some fruits:", list(my_fruit_list.index),['Avocado','Strawberries'])
-fruits_to_show = my_fruit_list.loc[fruits_selected]
 
-# Display the table on the page.
-streamlit.dataframe(fruits_to_show)
- 
+
+uploaded_file = st.file_uploader("Choose a file", type=["csv", "xlsx"])
+
+# Upload file to Snowflake using Snowpark
+df = spark.read.format("csv").option("header", "true").option("inferSchema", "true").schema(schema).load(uploaded_file)
+df.write.format("snowflake").option("dbtable", "your_target_table").mode("append").save()
+
+# Close the Snowpark session and Snowflake connection
+spark.stop()
+conn.close()
+
+
+
+
 
