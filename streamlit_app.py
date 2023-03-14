@@ -7,7 +7,7 @@ import snowflake.connector as sf
 conn = sf.connect(
     user = "SUGARDATA",
     password = "HomeAlone@1",
-    account = "ub37293",
+    account = "ub37293.ap-southeast-1",
     warehouse = "COMPUTE_WH",
     database = "TEST",
     schema = "PUBLIC"
