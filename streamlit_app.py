@@ -1,46 +1,28 @@
+# streamlit_app.py
+
 import streamlit as st
-import snowflake.connector as snow
-from snowpark import SparkSession
-from snowpark.sql.types import *
+import snowflake.connector
 
-# Connect to Snowflake
-conn = snow.connect(
-    user='your_username',
-    password='your_password',
-    account='your_account_name',
-    database='your_database_name',
-    schema='your_schema_name'
-)
+# Initialize connection.
+# Uses st.cache_resource to only run once.
+@st.cache_resource
+def init_connection():
+    return snowflake.connector.connect(
+        **st.secrets["snowflake"], client_session_keep_alive=True
+    )
 
-# Create a Snowpark session
-spark = SparkSession.builder() \
-            .option("spark.datasource.username", "your_username") \
-            .option("spark.datasource.password", "your_password") \
-            .option("spark.datasource.sfUrl", f"jdbc:snowflake://{your_account_name}.snowflakecomputing.com") \
-            .option("spark.datasource.sfDatabase", "your_database_name") \
-            .option("spark.datasource.sfSchema", "your_schema_name") \
-            .getOrCreate()
+conn = init_connection()
 
-# Define the schema for the Snowflake table
-schema = StructType([
-    StructField("col1", StringType(), True),
-    StructField("col2", IntegerType(), True),
-    StructField("col3", DoubleType(), True)
-])
+# Perform query.
+# Uses st.cache_data to only rerun when the query changes or after 10 min.
+@st.cache_data(ttl=600)
+def run_query(query):
+    with conn.cursor() as cur:
+        cur.execute(query)
+        return cur.fetchall()
 
+rows = run_query("SELECT * from mytable;")
 
-
-uploaded_file = st.file_uploader("Choose a file", type=["csv", "xlsx"])
-
-# Upload file to Snowflake using Snowpark
-df = spark.read.format("csv").option("header", "true").option("inferSchema", "true").schema(schema).load(uploaded_file)
-df.write.format("snowflake").option("dbtable", "your_target_table").mode("append").save()
-
-# Close the Snowpark session and Snowflake connection
-spark.stop()
-conn.close()
-
-
-
-
-
+# Print results.
+for row in rows:
+    st.write(f"{row[0]} has a :{row[1]}:")
