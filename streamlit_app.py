@@ -26,7 +26,7 @@ for uploaded_file in uploaded_files:
 
 if uploaded_file  is not None:
     table_name =uploaded_file.name.split(".")[0].replace(" ","_").upper()
-    columns = ",".join([f{col} string" for col in df.columns])
+    columns = ",".join([f"{col} string" for col in df.columns])
     
     cur.execute(f"CREATE TABLE IF NOT EXISTS {table_name}c({columns})")
     cur.commit()                   
