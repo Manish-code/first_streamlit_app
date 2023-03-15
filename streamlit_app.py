@@ -2,6 +2,7 @@
 
 import streamlit as st
 import snowflake.connector as sf
+import pandas as pd
 
 # Connect to Snowflake
 conn = sf.connect(
@@ -16,6 +17,23 @@ conn = sf.connect(
 # Create a cursor object
 cur = conn.cursor()
 
+
+uploaded_files = st.file_uploader("Choose a CSV file", accept_multiple_files=True)
+for uploaded_file in uploaded_files:
+    bytes_data = uploaded_file.read()
+    st.write("filename:", uploaded_file.name)
+    st.write(bytes_data)
+
+if uploaded_file  is not None:
+    table_name =uploaded_file.name.split(".")[0].replace(" ","_").upper()
+    columns = ",".join([f{col} string" for col in df.columns])
+    
+    cur.execute(f"CREATE TABLE IF NOT EXISTS {table_name}c({columns})")
+    cur.execute
+                        
+
+
+
 # Execute a query
 cur.execute('SELECT * FROM your_table')
 
@@ -28,8 +46,4 @@ print(one_row[0])
 # Display the data in a Streamlit table
 st.table(data)
 
-uploaded_files = st.file_uploader("Choose a CSV file", accept_multiple_files=True)
-for uploaded_file in uploaded_files:
-    bytes_data = uploaded_file.read()
-    st.write("filename:", uploaded_file.name)
-    st.write(bytes_data)
+
