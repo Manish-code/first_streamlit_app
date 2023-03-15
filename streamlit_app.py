@@ -6,13 +6,15 @@ import pandas as pd
 
 # Connect to Snowflake
 conn = sf.connect(
-    user = "SUGARDATA",
-    password = "HomeAlone@1",
-    account = "ub37293.ap-southeast-1",
-    warehouse = "COMPUTE_WH",
-    database = "TEST",
-    schema = "PUBLIC"
+    **SECRETS
 )
+
+#   user = "SUGARDATA",
+#     password = "HomeAlone@1",
+#     account = "ub37293.ap-southeast-1",
+#     warehouse = "COMPUTE_WH",
+#     database = "TEST",
+#     schema = "PUBLIC"
 
 # Create a cursor object
 cur = conn.cursor()
