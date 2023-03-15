@@ -29,13 +29,20 @@ if uploaded_file  is not None:
     columns = ",".join([f{col} string" for col in df.columns])
     
     cur.execute(f"CREATE TABLE IF NOT EXISTS {table_name}c({columns})")
-    cur.execute
+    cur.commit()                   
+                      
+    cur.execute(f"PUT {uploaded_file} @~ auto_compress=false;")
+    cur.commit()                     
+    cur.execute(f"COPY INTO {table_name} FROM '@~/{uploaded_file}' FILE_FORMAT = (TYPE = 'CSV');")
+    cur.commit()                     
+    cur.execute(f"LIST @%{table_name);")
+    cur.commit() 
                         
 
 
 
 # Execute a query
-cur.execute('SELECT * FROM your_table')
+cur.execute(f"SELECT * FROM {table_name}")
 
 # Fetch the data
 data = cur.fetchall()
