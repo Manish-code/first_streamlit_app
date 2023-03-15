@@ -35,7 +35,7 @@ if uploaded_file  is not None:
     cur.commit()                     
     cur.execute(f"COPY INTO {table_name} FROM '@~/{uploaded_file}' FILE_FORMAT = (TYPE = 'CSV');")
     cur.commit()                     
-    cur.execute(f"LIST @%{table_name);")
+    cur.execute(f"LIST @%{table_name});")
     cur.commit() 
                         
 
