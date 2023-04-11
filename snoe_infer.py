@@ -60,3 +60,6 @@ def infer_data_types(file_path):
 
 data_types = infer_data_types('sample_data.csv')
 print(data_types)
+
+# Expected output
+# [<class 'bool'>, <class 'int'>, <class 'datetime.date'>, <class 'datetime.time'>, <class 'datetime.datetime'>, <class 'str'>, <class 'dict'>, <class 'list'>]
