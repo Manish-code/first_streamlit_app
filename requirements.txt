@@ -1,5 +1,5 @@
 streamlit
-PyPDF2
+PyPDF4
 pdf2image
 Pillow
 sqlite3

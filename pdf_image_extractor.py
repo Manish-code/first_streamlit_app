@@ -1,6 +1,6 @@
 import streamlit as st
 import sqlite3
-from PyPDF2 import PdfFileReader
+from PyPDF4 import PdfFileReader
 from pdf2image import convert_from_path
 from PIL import Image
 
