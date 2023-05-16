@@ -83,7 +83,7 @@ if uploaded_file is not None:
     st.markdown(f"[{uploaded_file.name}]({output_pdf_path})")
 
     # Cleanup: Remove the temporary directory
-    shutil.rmtree(temp_dir)
+    # shutil.rmtree(temp_dir)
 
 # Close database connection
 conn.close()
