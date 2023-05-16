@@ -1,7 +1,6 @@
 import streamlit as st
 import sqlite3
 from PyPDF4 import PdfFileReader
-from pdf2image import convert_from_path
 from PIL import Image
 import tempfile
 import shutil
@@ -21,15 +20,27 @@ c.execute('''
 ''')
 
 def extract_images_from_pdf(input_pdf_path, output_pdf_path):
-    pdf = PdfFileReader(input_pdf_path)
+    pdf = PdfFileReader(open(input_pdf_path, 'rb'))
     images = []
 
     for page_num in range(pdf.getNumPages()):
-        images += convert_from_path(input_pdf_path, dpi=200, first_page=page_num+1, last_page=page_num+1)
+        page = pdf.getPage(page_num)
+        try:
+            image = page['/Resources']['/XObject'].getObject()
+            if image['/Subtype'] == '/Image':
+                data = image._data
+                if image['/ColorSpace'] == '/DeviceRGB':
+                    mode = 'RGB'
+                else:
+                    mode = 'P'
+
+                img = Image.frombytes(mode, (image['/Width'], image['/Height']), data)
+                images.append(img)
+        except KeyError:
+            pass
 
     with open(output_pdf_path, 'wb') as output_file:
-        output_images = [Image.open(img) for img in images]
-        output_images[0].save(output_file, "PDF", resolution=100.0, save_all=True, append_images=output_images[1:])
+        output_images = [img.save(output_file, format='pdf') for img in images]
 
 def save_to_database(pdf_path, image_pdf_path):
     c.execute("INSERT INTO pdfs (pdf_path, image_pdf_path) VALUES (?, ?)", (pdf_path, image_pdf_path))
