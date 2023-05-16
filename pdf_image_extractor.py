@@ -1,6 +1,7 @@
 import streamlit as st
 import sqlite3
 from PyPDF4 import PdfFileReader
+from PyPDF4.utils import PdfReadError
 from PIL import Image
 import tempfile
 import shutil
@@ -20,27 +21,19 @@ c.execute('''
 ''')
 
 def extract_images_from_pdf(input_pdf_path, output_pdf_path):
-    pdf = PdfFileReader(open(input_pdf_path, 'rb'))
-    images = []
+    try:
+        pdf = PdfFileReader(input_pdf_path)
+        images = []
 
-    for page_num in range(pdf.getNumPages()):
-        page = pdf.getPage(page_num)
-        try:
-            image = page['/Resources']['/XObject'].getObject()
-            if image['/Subtype'] == '/Image':
-                data = image._data
-                if image['/ColorSpace'] == '/DeviceRGB':
-                    mode = 'RGB'
-                else:
-                    mode = 'P'
+        for page_num in range(pdf.getNumPages()):
+            images.append(pdf.getPage(page_num).extract_text())
 
-                img = Image.frombytes(mode, (image['/Width'], image['/Height']), data)
-                images.append(img)
-        except KeyError:
-            pass
-
-    with open(output_pdf_path, 'wb') as output_file:
-        output_images = [img.save(output_file, format='pdf') for img in images]
+        with open(output_pdf_path, 'wb') as output_file:
+            output_images = [Image.open(img) for img in images]
+            output_images[0].save(output_file, "PDF", resolution=100.0, save_all=True, append_images=output_images[1:])
+            
+    except PdfReadError:
+        st.error("Invalid PDF format. Please upload a valid PDF file.")
 
 def save_to_database(pdf_path, image_pdf_path):
     c.execute("INSERT INTO pdfs (pdf_path, image_pdf_path) VALUES (?, ?)", (pdf_path, image_pdf_path))
@@ -78,12 +71,13 @@ if uploaded_file is not None:
         mime="application/pdf"
     )
 
-    # Fetch the copied PDF file for further processing
-    st.write("Copied PDF file for further processing:")
-    st.markdown(f"[{uploaded_file.name}]({output_pdf_path})")
+    # Display the output PDF
+    st.write("Output PDF:")
+    with open(output_pdf_path, 'rb') as pdf_file:
+        st.write(pdf_file.read())
 
     # Cleanup: Remove the temporary directory
-    # shutil.rmtree(temp_dir)
+    shutil.rmtree(temp_dir)
 
 # Close database connection
 conn.close()
