@@ -3,6 +3,9 @@ import sqlite3
 from PyPDF4 import PdfFileReader
 from pdf2image import convert_from_path
 from PIL import Image
+import tempfile
+import shutil
+import os
 
 # Create SQLite database connection
 conn = sqlite3.connect('pdf_image.db')
@@ -39,22 +42,37 @@ st.title("PDF Image Extractor and Creator")
 uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
 
 if uploaded_file is not None:
+    # Create a temporary directory
+    temp_dir = tempfile.mkdtemp()
+
+    # Save the uploaded file to the temporary directory
+    temp_file_path = os.path.join(temp_dir, uploaded_file.name)
+    with open(temp_file_path, 'wb') as temp_file:
+        shutil.copyfileobj(uploaded_file, temp_file)
+
     # Extract and create PDF
     st.write("Extracting images and creating PDF...")
-    output_pdf_path = f"output_images.pdf"
-    extract_images_from_pdf(uploaded_file.name, output_pdf_path)
+    output_pdf_path = os.path.join(temp_dir, "output_images.pdf")
+    extract_images_from_pdf(temp_file_path, output_pdf_path)
     st.success("Extraction complete!")
 
     # Save to database
     save_to_database(uploaded_file.name, output_pdf_path)
 
-    # Download the created PDF
+    # Provide a download link to the output PDF
     st.download_button(
         label="Download Output PDF",
         data=open(output_pdf_path, 'rb').read(),
         file_name="output_images.pdf",
         mime="application/pdf"
     )
+
+    # Fetch the copied PDF file for further processing
+    st.write("Copied PDF file for further processing:")
+    st.markdown(f"[{uploaded_file.name}]({output_pdf_path})")
+
+    # Cleanup: Remove the temporary directory
+    shutil.rmtree(temp_dir)
 
 # Close database connection
 conn.close()
