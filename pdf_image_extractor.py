@@ -91,20 +91,9 @@ if uploaded_file is not None:
     save_to_database(uploaded_file.name, output_pdf_path)
 
     # Provide a download link to the output PDF
-    st.download_button(
-        label="Download Output PDF",
-        data=open(output_pdf_path, 'rb').read(),
-        file_name="output_images.pdf",
-        mime="application/pdf"
-    )
+    st.markdown(f"Download the output PDF: [Output PDF](./{output_pdf_path})")
 
 
-    # Display the output PDF
-    st.image(output_pdf_path, caption="Output PDF")
-
-    # Fetch the copied PDF file for further processing
-    st.write("Copied PDF file for further processing:")
-    st.markdown(f"[{uploaded_file.name}]({output_pdf_path})")
 
     # Cleanup: Remove the temporary directory
     shutil.rmtree(temp_dir)
