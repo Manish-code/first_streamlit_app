@@ -23,17 +23,16 @@ c.execute('''
 def extract_images_from_pdf(input_pdf_path, output_pdf_path):
     try:
         pdf = PdfFileReader(input_pdf_path)
-        images = []
+        texts = []
 
         for page_num in range(pdf.getNumPages()):
             page = pdf.getPage(page_num)
             text = page.extractText()
-            images.append(text)
+            texts.append(text)
 
-        with open(output_pdf_path, 'wb') as output_file:
-            output_images = [Image.open(img) for img in images]
-            output_images[0].save(output_file, "PDF", resolution=100.0, save_all=True, append_images=output_images[1:])
-            
+        with open(output_pdf_path, 'w') as output_file:
+            output_file.write('\n\n'.join(texts))
+
     except PdfReadError:
         st.error("Invalid PDF format. Please upload a valid PDF file.")
 
@@ -58,7 +57,7 @@ if uploaded_file is not None:
 
     # Extract and create PDF
     st.write("Extracting images and creating PDF...")
-    output_pdf_path = os.path.join(temp_dir, "output_images.pdf")
+    output_pdf_path = os.path.join(temp_dir, "output_images.txt")
     extract_images_from_pdf(temp_file_path, output_pdf_path)
     st.success("Extraction complete!")
 
@@ -69,14 +68,14 @@ if uploaded_file is not None:
     st.download_button(
         label="Download Output PDF",
         data=open(output_pdf_path, 'rb').read(),
-        file_name="output_images.pdf",
-        mime="application/pdf"
+        file_name="output_images.txt",
+        mime="text/plain"
     )
 
     # Display the output PDF
     st.write("Output PDF:")
-    with open(output_pdf_path, 'rb') as pdf_file:
-        st.write(pdf_file.read())
+    with open(output_pdf_path, 'r') as txt_file:
+        st.write(txt_file.read())
 
     # Cleanup: Remove the temporary directory
     shutil.rmtree(temp_dir)
