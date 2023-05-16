@@ -2,3 +2,4 @@ streamlit
 PyPDF4
 pdf2image
 Pillow
+poppler-utils
