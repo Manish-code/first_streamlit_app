@@ -1,7 +1,6 @@
 import streamlit as st
 import sqlite3
-from PyPDF4 import PdfFileReader
-from PyPDF4.utils import PdfReadError
+from PyPDF4 import PdfFileReader, PdfReadError
 from PIL import Image
 import tempfile
 import shutil
@@ -23,15 +22,42 @@ c.execute('''
 def extract_images_from_pdf(input_pdf_path, output_pdf_path):
     try:
         pdf = PdfFileReader(input_pdf_path)
-        texts = []
+        images = []
 
         for page_num in range(pdf.getNumPages()):
-            page = pdf.getPage(page_num)
-            text = page.extractText()
-            texts.append(text)
+            try:
+                page = pdf.getPage(page_num)
+                if '/XObject' in page['/Resources']:
+                    x_objects = page['/Resources']['/XObject'].getObject()
+                    for obj in x_objects:
+                        if x_objects[obj]['/Subtype'] == '/Image':
+                            img = x_objects[obj]
+                            if '/Filter' in img:
+                                if img['/Filter'] == '/FlateDecode':
+                                    img_data = img._data
+                                    img = Image.frombytes(
+                                        img['/ColorSpace'] if '/ColorSpace' in img else '/DeviceRGB',
+                                        (img['/Width'], img['/Height']),
+                                        img_data,
+                                        'raw',
+                                        (img['/ColorSpace'] if '/ColorSpace' in img else '/DeviceRGB'),
+                                        0,
+                                        1
+                                    )
+                                elif img['/Filter'] == '/DCTDecode':
+                                    img_data = img._data
+                                    img = Image.open(img_data)
 
-        with open(output_pdf_path, 'w') as output_file:
-            output_file.write('\n\n'.join(texts))
+                            images.append(img)
+
+            except Exception as e:
+                st.warning(f"Failed to extract images from page {page_num+1}: {str(e)}")
+
+        if images:
+            with open(output_pdf_path, 'wb') as output_file:
+                images[0].save(output_file, "PDF", resolution=100.0, save_all=True, append_images=images[1:])
+        else:
+            st.warning("No images found in the PDF.")
 
     except PdfReadError:
         st.error("Invalid PDF format. Please upload a valid PDF file.")
@@ -57,7 +83,7 @@ if uploaded_file is not None:
 
     # Extract and create PDF
     st.write("Extracting images and creating PDF...")
-    output_pdf_path = os.path.join(temp_dir, "output_images.txt")
+    output_pdf_path = os.path.join(temp_dir, "output_images.pdf")
     extract_images_from_pdf(temp_file_path, output_pdf_path)
     st.success("Extraction complete!")
 
@@ -68,14 +94,13 @@ if uploaded_file is not None:
     st.download_button(
         label="Download Output PDF",
         data=open(output_pdf_path, 'rb').read(),
-        file_name="output_images.txt",
-        mime="text/plain"
+        file_name="output_images.pdf",
+        mime="application/pdf"
     )
 
     # Display the output PDF
     st.write("Output PDF:")
-    with open(output_pdf_path, 'r') as txt_file:
-        st.write(txt_file.read())
+    st.image(output_pdf_path)
 
     # Cleanup: Remove the temporary directory
     shutil.rmtree(temp_dir)
