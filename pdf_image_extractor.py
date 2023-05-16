@@ -27,7 +27,8 @@ def extract_images_from_pdf(input_pdf_path, output_pdf_path):
 
         for page_num in range(pdf.getNumPages()):
             page = pdf.getPage(page_num)
-            images.append(page.extract_text())
+            text = page.extractText()
+            images.append(text)
 
         with open(output_pdf_path, 'wb') as output_file:
             output_images = [Image.open(img) for img in images]
